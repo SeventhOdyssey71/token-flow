@@ -1,0 +1,142 @@
+.csv-uploader {
+  margin-bottom: 1.5rem;
+}
+
+.csv-upload-area {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: var(--card-bg);
+}
+
+.csv-upload-area:hover {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.upload-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.upload-icon {
+  width: 40px;
+  height: 40px;
+  fill: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.upload-prompt p {
+  font-weight: 600;
+  margin: 0;
+  color: var(--text);
+}
+
+.upload-hint {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.file-info {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.file-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.file-name {
+  font-weight: 500;
+  color: var(--text);
+  font-size: 0.9rem;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+
+.upload-progress {
+  width: 100%;
+  height: 4px;
+  background-color: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.remove-file {
+  background: none;
+  border: none;
+  color: var(--error);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.remove-file:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+.upload-success {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: rgba(0, 200, 83, 0.1);
+  border: 1px solid var(--success);
+  border-radius: 6px;
+  color: var(--success);
+  font-weight: 500;
+}
+
+.upload-success p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+}
+
+.upload-error {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: rgba(255, 59, 48, 0.1);
+  border: 1px solid var(--error);
+  border-radius: 6px;
+  color: var(--error);
+  font-weight: 500;
+}
+
+.upload-error p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

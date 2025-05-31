@@ -1,0 +1,97 @@
+/* Custom styling for ConnectButton to match Token Flow design */
+
+/* Target the ConnectButton component */
+.sui-connect-button {
+  background-color: transparent !important;
+  color: var(--primary) !important;
+  border: 1px solid var(--primary) !important;
+  border-radius: 8px !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.sui-connect-button:hover {
+  background-color: var(--primary) !important;
+  color: white !important;
+}
+
+/* Style for the connected button */
+.sui-connect-button[data-connected="true"] {
+  background-color: transparent !important;
+  color: var(--primary) !important;
+  border: 1px solid var(--primary) !important;
+}
+
+/* Style for the dropdown menu */
+.sui-connect-dropdown {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px var(--shadow-color) !important;
+  border: 1px solid var(--border) !important;
+  background-color: var(--card-bg) !important;
+  color: var(--text) !important;
+}
+
+/* Style dropdown items */
+.sui-connect-dropdown-item {
+  color: var(--text) !important;
+}
+
+.sui-connect-dropdown-item:hover {
+  background-color: var(--primary-light) !important;
+}
+
+/* Style for the wallet modal */
+.sui-connect-modal {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px var(--shadow-color) !important;
+  background-color: var(--card-bg) !important;
+  color: var(--text) !important;
+}
+
+/* Dark mode specific styles */
+[data-theme="dark"] .sui-connect-button {
+  color: white !important;
+  border-color: var(--primary) !important;
+  background-color: transparent !important;
+}
+
+[data-theme="dark"] .sui-connect-button:hover {
+  background-color: var(--primary) !important;
+  color: white !important;
+}
+
+[data-theme="dark"] .sui-connect-button[data-connected="true"] {
+  color: white !important;
+  border-color: var(--primary) !important;
+}
+
+[data-theme="dark"] .sui-connect-modal-overlay {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+[data-theme="dark"] .sui-connect-modal {
+  border: 1px solid var(--border) !important;
+}
+
+[data-theme="dark"] .sui-connect-modal-title,
+[data-theme="dark"] .sui-connect-modal-subtitle {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .sui-connect-wallet-item {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  border: 1px solid var(--border) !important;
+}
+
+[data-theme="dark"] .sui-connect-wallet-item:hover {
+  background-color: rgba(59, 130, 246, 0.2) !important;
+}
