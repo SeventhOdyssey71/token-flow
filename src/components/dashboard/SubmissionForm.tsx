@@ -64,14 +64,20 @@ const SubmissionForm: React.FC = () => {
   const submitAddress = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check if formData exists
+    if (!formData) {
+      setError("Form data not loaded. Please refresh the page and try again.");
+      return;
+    }
+    
     if (!walletAddress) {
       setError('Please enter your wallet address');
       return;
     }
     
     // Basic validation for Sui wallet address
-    if (!walletAddress.startsWith('0x') || walletAddress.length !== 66) {
-      setError('Please enter a valid Sui wallet address (0x followed by 64 hex characters)');
+    if (!walletAddress.match(/^0x[a-fA-F0-9]{64}$/)) {
+      setError('Please enter a valid Sui wallet address (0x followed by 64 hexadecimal characters)');
       return;
     }
     
