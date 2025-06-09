@@ -7,8 +7,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { getFullnodeUrl } from '@mysten/sui/client'
 import '@mysten/dapp-kit/dist/index.css'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import AirdropDashboard from './components/dashboard/AirdropDashboard'
+import FunctionalDashboard from './components/dashboard/FunctionalDashboard'
 import SubmissionForm from './components/dashboard/SubmissionForm'
+import CreateEvent from './components/CreateEvent'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -29,15 +31,18 @@ const { networkConfig } = createNetworkConfig({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <SuiClientProvider networks={networkConfig} defaultNetwork="mainnet">
+      <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
         <WalletProvider autoConnect preferredWallets={[]}>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<App />} />
-              <Route path="/dashboard" element={<AirdropDashboard />} />
-              <Route path="/submit/:formId" element={<SubmissionForm />} />
-            </Routes>
-          </BrowserRouter>
+          <ThemeProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<App />} />
+                <Route path="/dashboard" element={<FunctionalDashboard />} />
+                <Route path="/create-event" element={<CreateEvent />} />
+                <Route path="/submit/:formId" element={<SubmissionForm />} />
+              </Routes>
+            </BrowserRouter>
+          </ThemeProvider>
         </WalletProvider>
       </SuiClientProvider>
     </QueryClientProvider>
