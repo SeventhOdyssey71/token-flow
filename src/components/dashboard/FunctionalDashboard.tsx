@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useCurrentAccount, useDisconnectWallet } from '@mysten/dapp-kit';
+import { useCurrentAccount, ConnectButton } from '@mysten/dapp-kit';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useContract } from '../../hooks/useContract';
+import WalletStatus from '../WalletStatus';
+import ScrollingDistributionBar from '../ScrollingDistributionBar';
 import '../../App.css';
 import './Dashboard.css';
 
@@ -20,12 +22,10 @@ interface Distribution {
 const FunctionalDashboard: React.FC = () => {
   const { isDarkMode, toggleTheme } = useTheme();
   const account = useCurrentAccount();
-  const { mutate: disconnect } = useDisconnectWallet();
   const navigate = useNavigate();
   const location = useLocation();
-  const { getDistributionStats } = useContract();
+  const { getDistributionStats, getDistributionHistory, getUserDistributions } = useContract();
   
-  const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -34,16 +34,25 @@ const FunctionalDashboard: React.FC = () => {
     totalDistributions: 0,
     distributions: [] as Distribution[]
   });
-  const [viewMode, setViewMode] = useState<'all' | 'mine'>('mine');
+  const [userStats, setUserStats] = useState({
+    totalSuiSent: 0,
+    totalSuiReceived: 0,
+    distributionsMade: 0,
+    distributionsReceived: 0
+  });
+  const [viewMode, setViewMode] = useState<'all' | 'mine'>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const fetchControllerRef = useRef<AbortController | null>(null);
+  const lastAccountRef = useRef<string | undefined>(account?.address);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Redirect to home if no wallet is connected
-    if (!account) {
-      navigate('/');
+    // Only redirect if no wallet is connected AND we're in "mine" mode
+    if (!account && viewMode === 'mine') {
+      setViewMode('all'); // Switch to "all" mode instead of redirecting
     }
-  }, [account, navigate]);
+  }, [account, viewMode]);
 
   // Show success message if redirected from create event
   useEffect(() => {
@@ -57,7 +66,8 @@ const FunctionalDashboard: React.FC = () => {
   }, [location]);
 
   // Memoized fetch function to prevent recreation on every render
-  const fetchStats = useCallback(async (signal?: AbortSignal) => {
+  const fetchStats = useCallback(async (isManualRefresh = false) => {
+    // For "mine" mode, require an account; for "all" mode, allow any user
     if (!account && viewMode === 'mine') return;
     
     // Cancel any previous fetch
@@ -69,81 +79,132 @@ const FunctionalDashboard: React.FC = () => {
     const controller = new AbortController();
     fetchControllerRef.current = controller;
     
-    // Don't set loading if we're just refreshing
-    if (!isRefreshing && !stats.distributions.length) {
+    // Only show loading on initial load or manual refresh
+    if (!isInitialized || isManualRefresh) {
       setIsLoading(true);
     }
     
     try {
-      const data = await getDistributionStats(viewMode === 'mine' ? account?.address : undefined);
-      
-      // Check if this request was aborted
-      if (!signal?.aborted && !controller.signal.aborted) {
-        setStats(data);
+      if (viewMode === 'all') {
+        // Get all distributions
+        const data = await getDistributionStats();
+        
+        // Check if this request was aborted
+        if (!controller.signal.aborted) {
+          setStats(data);
+          setIsInitialized(true);
+        }
+      } else if (viewMode === 'mine' && account) {
+        // Get user-specific distributions where they are distributor OR recipient
+        const myDistributions = await getUserDistributions(account.address);
+        
+        // Calculate stats for user's distributions
+        let totalSuiDonated = 0;
+        let totalSuiReceived = 0;
+        let distributionsMade = 0;
+        let distributionsReceived = 0;
+        
+        myDistributions.forEach((dist: any) => {
+          if (dist.distributor === account.address) {
+            // User is distributor
+            totalSuiDonated += dist.totalAmount;
+            distributionsMade++;
+          } else {
+            // User is recipient
+            totalSuiReceived += dist.amountPerRecipient;
+            distributionsReceived++;
+          }
+        });
+        
+        // Get unique wallets - all recipients from distributions where user was distributor
+        const uniqueRecipientsSet = new Set<string>();
+        myDistributions
+          .filter((dist: any) => dist.distributor === account.address)
+          .forEach((dist: any) => {
+            dist.recipients.forEach((recipient: string) => uniqueRecipientsSet.add(recipient));
+          });
+        
+        if (!controller.signal.aborted) {
+          setStats({
+            totalSuiDonated: totalSuiDonated + totalSuiReceived, // Total involved
+            uniqueWallets: uniqueRecipientsSet.size,
+            totalDistributions: myDistributions.length,
+            distributions: myDistributions
+          });
+          setUserStats({
+            totalSuiSent: totalSuiDonated,
+            totalSuiReceived: totalSuiReceived,
+            distributionsMade: distributionsMade,
+            distributionsReceived: distributionsReceived
+          });
+          setIsInitialized(true);
+        }
       }
     } catch (error: any) {
       if (error.name !== 'AbortError') {
         console.error('Error fetching stats:', error);
       }
     } finally {
-      if (!signal?.aborted && !controller.signal.aborted) {
+      if (!controller.signal.aborted) {
         setIsLoading(false);
         setIsRefreshing(false);
       }
     }
-  }, [account, viewMode, getDistributionStats, isRefreshing, stats.distributions.length]);
+  }, [account, viewMode, getDistributionStats, getUserDistributions]);
+
+  // Handle account changes - reset state when wallet changes
+  useEffect(() => {
+    // Only reset if account actually changed (not just a re-render)
+    if (lastAccountRef.current !== account?.address) {
+      lastAccountRef.current = account?.address;
+      
+      // Cancel any ongoing requests when account changes
+      if (fetchControllerRef.current) {
+        fetchControllerRef.current.abort();
+      }
+      
+      // Reset stats when account changes
+      setStats({
+        totalSuiDonated: 0,
+        uniqueWallets: 0,
+        totalDistributions: 0,
+        distributions: []
+      });
+      
+      // Reset loading and initialization state
+      setIsLoading(true);
+      setIsRefreshing(false);
+      setIsInitialized(false);
+    }
+  }, [account?.address]); // Only run when account address changes
 
   // Initial fetch and interval setup
   useEffect(() => {
-    const controller = new AbortController();
+    let mounted = true;
     
-    // Initial fetch
-    fetchStats(controller.signal);
+    // Initial fetch - allow for "all" mode even without account
+    if (mounted && (account || viewMode === 'all')) {
+      fetchStats();
+    }
     
-    // Set up interval for refreshing
+    // Set up interval for refreshing (background updates)
     const interval = setInterval(() => {
-      setIsRefreshing(true);
-      fetchStats(controller.signal);
+      if (mounted && !isLoading && (account || viewMode === 'all')) {
+        fetchStats();
+      }
     }, 30000);
     
     // Cleanup
     return () => {
+      mounted = false;
       clearInterval(interval);
-      controller.abort();
       if (fetchControllerRef.current) {
         fetchControllerRef.current.abort();
       }
     };
-  }, [fetchStats]);
+  }, [viewMode, account, fetchStats]); // Re-run when viewMode, account or fetchStats changes
 
-  useEffect(() => {
-    // Close dropdown when clicking outside
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (!target.closest('.wallet-status')) {
-        setShowDisconnectMenu(false);
-      }
-    };
-
-    if (showDisconnectMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showDisconnectMenu]);
-
-  const handleDisconnect = () => {
-    disconnect();
-    navigate('/');
-  };
-
-  // Redirect to home if no wallet connected
-  if (!account) {
-    return null;
-  }
-
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
+  // No longer redirect - allow viewing "All distributions" without wallet
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -180,9 +241,11 @@ const FunctionalDashboard: React.FC = () => {
               <rect x="18" y="18" width="10" height="10" rx="2" fill="url(#dashboard-logo-gradient)" opacity="0.9" />
             </svg>
             <span className="brand-name">TokenFlow</span>
-            <span className="beta-badge">Beta</span>
+            <span className="beta-badge desktop-only">Beta</span>
           </Link>
-          <div className="nav-actions">
+          
+          {/* Desktop Navigation */}
+          <div className="nav-actions desktop-nav">
             <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
               {isDarkMode ? (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -202,41 +265,75 @@ const FunctionalDashboard: React.FC = () => {
                 </svg>
               )}
             </button>
-            <div className="wallet-status">
-              <div 
-                className="wallet-indicator"
-                onClick={() => setShowDisconnectMenu(!showDisconnectMenu)}
-              >
-                <div className="status-dot"></div>
-                <span>{formatAddress(account.address)}</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="dropdown-arrow">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </div>
-              
-              {showDisconnectMenu && (
-                <div className="wallet-dropdown">
-                  <div className="wallet-info">
-                    <strong>Connected Wallet</strong>
-                    <span>{account.address}</span>
-                  </div>
-                  <button 
-                    className="disconnect-btn"
-                    onClick={handleDisconnect}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                      <polyline points="16 17 21 12 16 7" />
-                      <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                    Disconnect Wallet
-                  </button>
-                </div>
+            {account ? (
+              <WalletStatus />
+            ) : (
+              <ConnectButton connectText="Connect Wallet" />
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button 
+            className="mobile-menu-toggle"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle mobile menu"
+          >
+            {isMobileMenuOpen ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            )}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+          <div className="mobile-menu-content">
+            <button className="theme-toggle-mobile" onClick={toggleTheme}>
+              {isDarkMode ? (
+                <>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                  </svg>
+                  <span>Light Mode</span>
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                  </svg>
+                  <span>Dark Mode</span>
+                </>
               )}
-            </div>
+            </button>
+            <Link to="/" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 12h18m-9-9v18"/>
+              </svg>
+              <span>Home</span>
+            </Link>
+            {account ? (
+              <div className="mobile-wallet-section">
+                <WalletStatus />
+              </div>
+            ) : (
+              <ConnectButton connectText="Connect Wallet" />
+            )}
           </div>
         </div>
       </nav>
+
+      {/* Scrolling Distribution Bar */}
+      <ScrollingDistributionBar />
 
       {/* Success Message */}
       {successMessage && (
@@ -280,7 +377,11 @@ const FunctionalDashboard: React.FC = () => {
             <button 
               className={`toggle-btn ${viewMode === 'mine' ? 'active' : ''}`}
               onClick={() => {
-                if (viewMode !== 'mine') {
+                if (viewMode !== 'mine' && account) {
+                  // Cancel any ongoing requests
+                  if (fetchControllerRef.current) {
+                    fetchControllerRef.current.abort();
+                  }
                   setViewMode('mine');
                   setStats({
                     totalSuiDonated: 0,
@@ -288,9 +389,12 @@ const FunctionalDashboard: React.FC = () => {
                     totalDistributions: 0,
                     distributions: []
                   });
+                  setIsLoading(true);
+                  setIsInitialized(false);
                 }
               }}
-              disabled={isLoading}
+              disabled={isLoading || isRefreshing || !account}
+              title={!account ? 'Connect wallet to view your distributions' : ''}
             >
               My Distributions
             </button>
@@ -298,6 +402,10 @@ const FunctionalDashboard: React.FC = () => {
               className={`toggle-btn ${viewMode === 'all' ? 'active' : ''}`}
               onClick={() => {
                 if (viewMode !== 'all') {
+                  // Cancel any ongoing requests
+                  if (fetchControllerRef.current) {
+                    fetchControllerRef.current.abort();
+                  }
                   setViewMode('all');
                   setStats({
                     totalSuiDonated: 0,
@@ -305,32 +413,70 @@ const FunctionalDashboard: React.FC = () => {
                     totalDistributions: 0,
                     distributions: []
                   });
+                  setIsLoading(true);
+                  setIsInitialized(false);
                 }
               }}
-              disabled={isLoading}
+              disabled={isLoading || isRefreshing}
             >
               All Distributions
             </button>
           </div>
 
+          {/* User Summary for My Distributions */}
+          {viewMode === 'mine' && !isLoading && (
+            <div className="user-summary-box" style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: '16px',
+              padding: '1.5rem',
+              marginBottom: '2rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div>
+                <h4 style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Distributions Sent</h4>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '1.5rem', fontWeight: '700', color: '#ef4444' }}>
+                    {userStats.totalSuiSent.toFixed(2)} SUI
+                  </span>
+                  <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                    ({userStats.distributionsMade} distributions)
+                  </span>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <h4 style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Distributions Received</h4>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                  <span style={{ fontSize: '1.5rem', fontWeight: '700', color: '#16a34a' }}>
+                    +{userStats.totalSuiReceived.toFixed(2)} SUI
+                  </span>
+                  <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                    ({userStats.distributionsReceived} distributions)
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Stats Overview */}
           <section className="stats-section">
             <div className="stats-grid">
-              <div className="stat-card">
+              <div className="stat-card centered">
                 <div className="stat-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="12" y1="1" x2="12" y2="23" />
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                   </svg>
                 </div>
                 <div className="stat-content">
                   <h3>{isLoading ? '...' : stats.totalSuiDonated.toFixed(2)}</h3>
-                  <p>Total SUI Distributed</p>
-                  <span className="stat-change neutral">Lifetime total</span>
+                  <p>{viewMode === 'mine' ? 'Total SUI Involved' : 'Total SUI Distributed'}</p>
+                  <span className="stat-change neutral">{viewMode === 'mine' ? 'Sent + Received' : 'Lifetime total'}</span>
                 </div>
               </div>
               
-              <div className="stat-card">
+              <div className="stat-card centered">
                 <div className="stat-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -341,17 +487,17 @@ const FunctionalDashboard: React.FC = () => {
                 </div>
                 <div className="stat-content">
                   <h3>{isLoading ? '...' : stats.uniqueWallets.toLocaleString()}</h3>
-                  <p>Unique Recipients</p>
-                  <span className="stat-change neutral">Across all distributions</span>
+                  <p>{viewMode === 'mine' ? 'Recipients Reached' : 'Unique Recipients'}</p>
+                  <span className="stat-change neutral">{viewMode === 'mine' ? 'From your distributions' : 'Across all distributions'}</span>
                 </div>
               </div>
               
-              <div className="stat-card">
+              <div className="stat-card centered">
                 <div className="stat-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <line x1="9" y1="9" x2="15" y2="9" />
-                    <line x1="9" y1="15" x2="15" y2="15" />
+                    <line x1="12" y1="8" x2="12" y2="16" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
                   </svg>
                 </div>
                 <div className="stat-content">
@@ -361,7 +507,7 @@ const FunctionalDashboard: React.FC = () => {
                 </div>
               </div>
               
-              <div className="stat-card">
+              <div className="stat-card centered">
                 <div className="stat-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
@@ -385,7 +531,7 @@ const FunctionalDashboard: React.FC = () => {
                   className={`icon-button ${isRefreshing ? 'refreshing' : ''}`}
                   onClick={() => {
                     setIsRefreshing(true);
-                    fetchStats();
+                    fetchStats(true);
                   }}
                   disabled={isLoading || isRefreshing}
                   title={isRefreshing ? 'Refreshing...' : 'Refresh data'}
@@ -432,6 +578,8 @@ const FunctionalDashboard: React.FC = () => {
                         <th style={{ padding: '1rem', textAlign: 'left' }}>Total Amount</th>
                         <th style={{ padding: '1rem', textAlign: 'left' }}>Recipients</th>
                         <th style={{ padding: '1rem', textAlign: 'left' }}>Per Recipient</th>
+                        {viewMode === 'mine' && <th style={{ padding: '1rem', textAlign: 'left' }}>Your Role</th>}
+                        {viewMode === 'mine' && <th style={{ padding: '1rem', textAlign: 'left' }}>Your Amount</th>}
                         <th style={{ padding: '1rem', textAlign: 'left' }}>Date</th>
                         <th style={{ padding: '1rem', textAlign: 'left' }}>Transaction</th>
                       </tr>
@@ -443,6 +591,31 @@ const FunctionalDashboard: React.FC = () => {
                           <td style={{ padding: '1rem' }}>{dist.totalAmount.toFixed(2)} SUI</td>
                           <td style={{ padding: '1rem' }}>{dist.recipients.length}</td>
                           <td style={{ padding: '1rem' }}>{dist.amountPerRecipient.toFixed(4)} SUI</td>
+                          {viewMode === 'mine' && (
+                            <td style={{ padding: '1rem' }}>
+                              <span style={{
+                                background: dist.distributor === account?.address ? 'rgba(37, 99, 235, 0.1)' : 'rgba(22, 163, 74, 0.1)',
+                                color: dist.distributor === account?.address ? '#2563eb' : '#16a34a',
+                                padding: '0.25rem 0.75rem',
+                                borderRadius: '4px',
+                                fontSize: '0.875rem',
+                                fontWeight: '500'
+                              }}>
+                                {dist.distributor === account?.address ? 'Distributor' : 'Recipient'}
+                              </span>
+                            </td>
+                          )}
+                          {viewMode === 'mine' && (
+                            <td style={{ padding: '1rem' }}>
+                              <span style={{
+                                fontWeight: '600',
+                                color: dist.distributor === account?.address ? '#ef4444' : '#16a34a'
+                              }}>
+                                {dist.distributor === account?.address ? '-' : '+'}{' '}
+                                {dist.distributor === account?.address ? dist.totalAmount.toFixed(2) : dist.amountPerRecipient.toFixed(4)} SUI
+                              </span>
+                            </td>
+                          )}
                           <td style={{ padding: '1rem' }}>{formatDate(dist.timestamp)}</td>
                           <td style={{ padding: '1rem' }}>
                             <a 

@@ -1,39 +1,47 @@
-# Token Flow
+# TokenFlow
+
+Token distribution platform, product by the 4dummies team
 
 ## Overview
 
-Token Flow is a decentralized application (dApp) built on the Sui blockchain that enables users to split tokens among multiple recipients. The application consists of a Move smart contract deployed on Sui mainnet and a React frontend interface.
+TokenFlow is a decentralized application (dApp) built on the Sui blockchain that enables users to instantly distribute tokens among multiple recipients. The application consists of a Move smart contract deployed on Sui testnet and a React frontend interface with real-time blockchain data integration.
 
 ## Features
 
-### Token Splitting
+### Instant Token Distribution
+- **One-Click Distribution**: Create and distribute tokens in a single transaction
+- **CSV Upload**: Import recipient addresses from CSV files
+- **Manual Entry**: Add recipients manually with validation
+- **Real-time Processing**: Instant token distribution upon transaction signing
 
-- **Equal Distribution**: Split tokens equally among multiple recipients
-- **Custom Distribution**: Specify custom amounts for each recipient
-- **CSV Upload**: Import recipient addresses from a CSV file
-- **Transaction Tracking**: View transaction status and explorer links
+### Distribution Dashboard
+- **My Distributions**: View personal distribution history (sent & received)
+- **All Distributions**: Browse all distributions on the platform
+- **Live Stats**: Real-time statistics including total SUI distributed, unique recipients
+- **Transaction History**: Complete history with transaction links
+- **Scrolling Distribution Bar**: Live feed of recent distributions
 
-### Address Collection Dashboard
-
-- **Form Creation**: Create custom forms to collect wallet addresses
-- **Shareable Links**: Generate unique links for recipients to submit their addresses
-- **Data Management**: View and manage all collected addresses
-- **CSV Export**: Export collected addresses for use with token splitting feature
+### Mobile-First Design
+- **Responsive Interface**: Fully optimized for mobile devices
+- **Hamburger Menu**: Clean mobile navigation
+- **Touch-Friendly**: Optimized for touch interactions
+- **Dark/Light Theme**: Toggle between themes for comfort
 
 ## Technical Stack
 
-- **Blockchain**: Sui Network (Mainnet)
+- **Blockchain**: Sui Network (Testnet)
 - **Smart Contract**: Move language
 - **Frontend**: React, TypeScript, Vite
-- **Styling**: CSS with light/dark theme support
+- **Styling**: CSS with monochrome theme system
 - **Wallet Connection**: @mysten/dapp-kit
-- **Backend Storage**: Firebase Firestore
+- **State Management**: React hooks and context
 - **Routing**: React Router
 
 ## Smart Contract Details
 
-- **Package ID**: 0x0b06ccbf49c99410c3f1584cebaaf1e027c73f5407e1608804d7a2c23bb9bea1
-- **Splitter Object ID**: 0x3b2dc3d948be777433677be129102a1cde8d9410b555127043f1779e7cb77b27
+- **Package ID**: 0xb3aae90f6f074bb83d8b42ad52d6bb12c71fa0696ab8e0d783cb709542c515de
+- **Module**: fund_distributor
+- **Network**: Sui Testnet
 
 ## Getting Started
 
@@ -42,14 +50,13 @@ Token Flow is a decentralized application (dApp) built on the Sui blockchain tha
 - Node.js (v16+)
 - npm or yarn
 - Sui wallet (e.g., Sui Wallet browser extension)
-- Firebase account (for address collection dashboard)
 
 ### Installation
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/shaibuafeez/Tokenflow.git
-   cd Tokenflow
+   git clone https://github.com/SeventhOdyssey71/token-flow.git
+   cd token-flow
    ```
 
 2. Install dependencies
@@ -57,57 +64,66 @@ Token Flow is a decentralized application (dApp) built on the Sui blockchain tha
    npm install
    ```
 
-3. Configure Firebase (for address collection dashboard)
-   - Create a Firebase project at [firebase.google.com](https://firebase.google.com)
-   - Enable Firestore database
-   - Update the Firebase configuration in `src/firebase.ts` with your project details
-
-4. Start the development server
+3. Start the development server
    ```bash
    npm run dev
    ```
 
-5. Open your browser and navigate to `http://localhost:5173`
+4. Open your browser and navigate to `http://localhost:5173`
 
 ## Usage
 
-### Token Splitting
+### Creating a Distribution
 
 1. Connect your Sui wallet
-2. Enter the total amount of SUI to split
-3. Add recipient addresses manually or import from CSV
-4. Choose between equal or custom distribution
-5. Execute the transaction
+2. Click "New Distribution" button
+3. Enter event name and amount
+4. Add recipients via:
+   - CSV upload (use template for format)
+   - Manual entry (paste addresses)
+5. Review and confirm
+6. Sign the transaction
 
-### Address Collection
+### Viewing Distributions
 
-1. Navigate to the dashboard using the "Address Dashboard" button
-2. Create a new form with a name
-3. Share the generated link with potential recipients
-4. Recipients submit their wallet addresses through the form
-5. View submissions and export as CSV
-6. Use the exported CSV in the token splitting feature
+1. Navigate to Distribution Dashboard
+2. Toggle between "My Distributions" and "All Distributions"
+3. View detailed statistics:
+   - Total SUI involved
+   - Recipients reached
+   - Distribution history
+   - Your role (Distributor/Recipient)
 
 ## Development
 
 ### Project Structure
 
 ```
+├── contracts/              # Move smart contracts
+│   ├── sources/
+│   │   └── fund_distributor.move
+│   └── tests/
 ├── public/                 # Static assets
 ├── src/
 │   ├── components/         # React components
-│   │   ├── dashboard/      # Address collection components
-│   │   │   ├── AirdropDashboard.tsx
-│   │   │   ├── SubmissionForm.tsx
-│   │   │   └── Dashboard.css
-│   │   ├── CSVUploader.tsx # CSV import component
-│   │   └── ...
-│   ├── App.tsx            # Main application component
-│   ├── main.tsx           # Application entry point with routing
-│   ├── firebase.ts        # Firebase configuration
-│   └── ...
+│   │   ├── dashboard/      # Dashboard components
+│   │   ├── CreateEvent.tsx # Distribution creation
+│   │   ├── WalletStatus.tsx
+│   │   └── ScrollingDistributionBar.tsx
+│   ├── contexts/          # React contexts
+│   ├── hooks/            # Custom hooks
+│   │   └── useContract.ts
+│   ├── App.tsx           # Main application
+│   └── main.tsx          # Entry point
 └── ...
 ```
+
+### Key Components
+
+- **FunctionalDashboard**: Main dashboard with distribution history
+- **CreateEvent**: Multi-step form for creating distributions
+- **useContract**: Hook for blockchain interactions
+- **ScrollingDistributionBar**: Live distribution feed
 
 ### Building for Production
 

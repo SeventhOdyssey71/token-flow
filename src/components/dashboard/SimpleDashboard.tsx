@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useCurrentAccount, useDisconnectWallet } from '@mysten/dapp-kit';
+import { useCurrentAccount, ConnectButton } from '@mysten/dapp-kit';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import WalletStatus from '../WalletStatus';
 import '../../App.css';
 import './Dashboard.css';
 
 const SimpleDashboard: React.FC = () => {
   const { isDarkMode, toggleTheme } = useTheme();
   const account = useCurrentAccount();
-  const { mutate: disconnect } = useDisconnectWallet();
   const navigate = useNavigate();
   const location = useLocation();
-  const [showDisconnectMenu, setShowDisconnectMenu] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -32,34 +31,10 @@ const SimpleDashboard: React.FC = () => {
     }
   }, [location]);
 
-  useEffect(() => {
-    // Close dropdown when clicking outside
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (!target.closest('.wallet-status')) {
-        setShowDisconnectMenu(false);
-      }
-    };
-
-    if (showDisconnectMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showDisconnectMenu]);
-
-  const handleDisconnect = () => {
-    disconnect();
-    navigate('/');
-  };
-
   // Redirect to home if no wallet connected
   if (!account) {
     return null;
   }
-
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
 
   return (
     <div className="dashboard-app-container">
@@ -102,38 +77,11 @@ const SimpleDashboard: React.FC = () => {
                 </svg>
               )}
             </button>
-            <div className="wallet-status">
-              <div 
-                className="wallet-indicator"
-                onClick={() => setShowDisconnectMenu(!showDisconnectMenu)}
-              >
-                <div className="status-dot"></div>
-                <span>{formatAddress(account.address)}</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="dropdown-arrow">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </div>
-              
-              {showDisconnectMenu && (
-                <div className="wallet-dropdown">
-                  <div className="wallet-info">
-                    <strong>Connected Wallet</strong>
-                    <span>{account.address}</span>
-                  </div>
-                  <button 
-                    className="disconnect-btn"
-                    onClick={handleDisconnect}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                      <polyline points="16 17 21 12 16 7" />
-                      <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                    Disconnect Wallet
-                  </button>
-                </div>
-              )}
-            </div>
+            {account ? (
+              <WalletStatus />
+            ) : (
+              <ConnectButton connectText="Connect Wallet" />
+            )}
           </div>
         </div>
       </nav>

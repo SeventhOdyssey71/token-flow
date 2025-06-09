@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useCurrentAccount, ConnectButton } from '@mysten/dapp-kit';
 import { useTheme } from '../contexts/ThemeContext';
 import { useContract } from '../hooks/useContract';
+import WalletStatus from './WalletStatus';
 import '../App.css';
 import './dashboard/Dashboard.css';
 import './CreateEvent.css';
@@ -197,7 +198,11 @@ const CreateEvent: React.FC = () => {
           >
             ← Back to Dashboard
           </button>
-          <ConnectButton connectText="Connect Wallet" />
+          {account ? (
+            <WalletStatus />
+          ) : (
+            <ConnectButton connectText="Connect Wallet" />
+          )}
         </div>
       </nav>
 

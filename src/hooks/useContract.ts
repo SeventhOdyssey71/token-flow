@@ -599,6 +599,50 @@ export const useContract = () => {
     }
   };
 
+  // Get user-specific distributions (as distributor or recipient)
+  const getUserDistributions = async (userAddress: string) => {
+    if (!suiClient || !userAddress) return [];
+
+    try {
+      // Query all InstantDistribution events
+      const events = await suiClient.queryEvents({
+        query: {
+          MoveEventType: `${CONTRACT_CONFIG.PACKAGE_ID}::${CONTRACT_CONFIG.MODULE_NAME}::InstantDistribution`
+        },
+        limit: 100,
+        order: 'descending'
+      });
+
+      // Filter distributions where user is either distributor or recipient
+      const userDistributions = events.data
+        .map((event: any) => {
+          const parsedEvent = event.parsedJson as any;
+          const eventTimestamp = event.timestampMs ? parseInt(event.timestampMs) : parseInt(parsedEvent.timestamp);
+          
+          return {
+            id: event.id.txDigest,
+            distributor: parsedEvent.distributor,
+            eventName: new TextDecoder().decode(new Uint8Array(parsedEvent.event_name)),
+            totalAmount: parseInt(parsedEvent.total_amount) / 1_000_000_000,
+            recipients: parsedEvent.recipients,
+            amountPerRecipient: parseInt(parsedEvent.amount_per_recipient) / 1_000_000_000,
+            timestamp: new Date(eventTimestamp),
+            txDigest: event.id.txDigest,
+          };
+        })
+        .filter((dist: any) => {
+          // Include if user is distributor OR recipient
+          return dist.distributor === userAddress || 
+                 dist.recipients.includes(userAddress);
+        });
+
+      return userDistributions;
+    } catch (error) {
+      console.error('Error fetching user distributions:', error);
+      return [];
+    }
+  };
+
   // Get statistics from events
   const getDistributionStats = async (userAddress?: string) => {
     const distributions = await getDistributionHistory(userAddress);
@@ -626,6 +670,7 @@ export const useContract = () => {
     getEventDetails,
     getUserEvents,
     getDistributionHistory,
+    getUserDistributions,
     getDistributionStats,
     isLoading,
     error,

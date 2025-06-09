@@ -3,6 +3,7 @@ import './App.css'
 import { ConnectButton, useCurrentAccount } from '@mysten/dapp-kit'
 import { useTheme } from './contexts/ThemeContext'
 import { Link, useNavigate } from 'react-router-dom'
+import WalletStatus from './components/WalletStatus'
 
 // Mouse tracking hook for parallax effects
 const useMousePosition = () => {
@@ -46,6 +47,7 @@ function App() {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mousePosition = useMousePosition();
   const scrollProgress = useScrollProgress();
   const heroRef = useRef<HTMLElement>(null);
@@ -72,6 +74,18 @@ function App() {
 
     return () => clearInterval(testimonialInterval);
   }, []);
+
+  // Close mobile menu on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isMobileMenuOpen]);
 
   // Parallax effect for hero elements
   const parallaxTransform = `translate(${mousePosition.x * 0.01}px, ${mousePosition.y * 0.01}px)`;
@@ -128,9 +142,11 @@ function App() {
               <path d="M14 14 L26 26 M26 14 L14 26" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
             </svg>
             <span className="brand-name">TokenFlow</span>
-            <span className="beta-badge">Beta</span>
+            <span className="beta-badge desktop-only">Beta</span>
           </div>
-          <div className="nav-actions">
+          
+          {/* Desktop Navigation */}
+          <div className="nav-actions desktop-nav">
             <Link to="/dashboard" className="nav-link">Dashboard</Link>
             <a href="#features" className="nav-link">Features</a>
             <a href="#events" className="nav-link">Events</a>
@@ -153,7 +169,109 @@ function App() {
                 </svg>
               )}
             </button>
-            <ConnectButton connectText="Connect Wallet" />
+            {account ? (
+              <WalletStatus />
+            ) : (
+              <ConnectButton connectText="Connect Wallet" />
+            )}
+          </div>
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="mobile-menu-toggle"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle mobile menu"
+          >
+            {isMobileMenuOpen ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 12h18M3 6h18M3 18h18" />
+              </svg>
+            )}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+          <div className="mobile-menu-content">
+            <Link 
+              to="/dashboard" 
+              className="mobile-menu-item"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+              </svg>
+              Dashboard
+            </Link>
+            
+            <a 
+              href="#features" 
+              className="mobile-menu-item"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+              Features
+            </a>
+            
+            <a 
+              href="#events" 
+              className="mobile-menu-item"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              Events
+            </a>
+            
+            <button 
+              className="theme-toggle-mobile"
+              onClick={toggleTheme}
+            >
+              {isDarkMode ? (
+                <>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                  </svg>
+                  Light Mode
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                  </svg>
+                  Dark Mode
+                </>
+              )}
+            </button>
+            
+            <div className="mobile-wallet-section">
+              {account ? (
+                <WalletStatus />
+              ) : (
+                <ConnectButton connectText="Connect Wallet" />
+              )}
+            </div>
           </div>
         </div>
       </nav>

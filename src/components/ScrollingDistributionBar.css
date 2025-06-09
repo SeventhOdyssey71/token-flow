@@ -1,0 +1,165 @@
+/* Scrolling Distribution Bar Styles */
+.scrolling-distribution-bar {
+  width: 100%;
+  overflow: hidden;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 0;
+  position: fixed;
+  top: var(--navbar-height, 72px);
+  left: 0;
+  right: 0;
+  z-index: 999;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.scrolling-content {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  animation: scrollStrip 90s linear infinite;
+  will-change: transform;
+}
+
+@keyframes scrollStrip {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Pause animation on hover for readability */
+.scrolling-distribution-bar:hover .scrolling-content {
+  animation-play-state: paused;
+}
+
+.distribution-item {
+  margin: 0 2rem;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wallet-address {
+  color: #2563eb;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-weight: 500;
+  background: rgba(37, 99, 235, 0.08);
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+}
+
+.received-text {
+  color: var(--text-secondary);
+  font-size: 0.813rem;
+}
+
+.amount {
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 0.938rem;
+  background: rgba(22, 163, 74, 0.08);
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+}
+
+.currency {
+  color: #6366f1;
+  font-weight: 600;
+  font-size: 0.813rem;
+}
+
+.separator {
+  color: var(--text-muted);
+  margin: 0 0.5rem;
+  opacity: 0.5;
+}
+
+.placeholder-text {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .scrolling-distribution-bar {
+  background: var(--surface-elevated);
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="dark"] .wallet-address {
+  color: #7ee787;
+  background: rgba(126, 231, 135, 0.12);
+}
+
+[data-theme="dark"] .amount {
+  color: #f7c873;
+  background: rgba(247, 200, 115, 0.12);
+}
+
+[data-theme="dark"] .currency {
+  color: #8ec6ff;
+}
+
+/* Smooth edges */
+.scrolling-distribution-bar::before,
+.scrolling-distribution-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 60px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.scrolling-distribution-bar::before {
+  left: 0;
+  background: linear-gradient(to right, var(--surface) 10%, transparent);
+}
+
+.scrolling-distribution-bar::after {
+  right: 0;
+  background: linear-gradient(to left, var(--surface) 10%, transparent);
+}
+
+[data-theme="dark"] .scrolling-distribution-bar::before {
+  background: linear-gradient(to right, var(--surface-elevated) 10%, transparent);
+}
+
+[data-theme="dark"] .scrolling-distribution-bar::after {
+  background: linear-gradient(to left, var(--surface-elevated) 10%, transparent);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .scrolling-distribution-bar {
+    padding: 0.375rem 0;
+  }
+  
+  .distribution-item {
+    margin: 0 1rem;
+    font-size: 0.75rem;
+  }
+  
+  .wallet-address {
+    font-size: 0.75rem;
+    padding: 0.0625rem 0.25rem;
+  }
+  
+  .amount {
+    font-size: 0.75rem;
+    padding: 0.0625rem 0.25rem;
+  }
+  
+  .currency,
+  .received-text {
+    font-size: 0.625rem;
+  }
+  
+  .separator {
+    margin: 0 0.375rem;
+  }
+}

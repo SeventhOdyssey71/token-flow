@@ -26,6 +26,31 @@ interface DisplayEvent {
   successRate: number;
 }
 
+// Scrolling strip bar component
+const ScrollingStripBar: React.FC = () => {
+  // Placeholder data
+  const events = [
+    { address: '0xA1B2...C3D4', amount: '10', coin: 'SUI' },
+    { address: '0xE5F6...7890', amount: '25', coin: 'SUI' },
+    { address: '0x1234...5678', amount: '5', coin: 'SUI' },
+    { address: '0x9ABC...DEF0', amount: '100', coin: 'SUI' },
+    { address: '0xAAAA...BBBB', amount: '50', coin: 'SUI' },
+  ];
+  // Repeat the events to make the strip long enough
+  const repeated = [...events, ...events, ...events];
+  return (
+    <div className="scrolling-strip-bar">
+      <div className="scrolling-strip-content">
+        {repeated.map((e, i) => (
+          <span className="strip-item" key={i}>
+            <span className="strip-address">{e.address}</span> just received <span className="strip-amount">{e.amount}</span> <span className="strip-coin">{e.coin}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const AirdropDashboard: React.FC = () => {
   const { isDarkMode, toggleTheme } = useTheme();
   const account = useCurrentAccount();
@@ -160,6 +185,10 @@ const AirdropDashboard: React.FC = () => {
 
   return (
     <div className="dashboard-app-container">
+      {/* Top Feedback Bar */}
+      <div className="feedback-bar top">
+        Submit your feedback and questions <a href="#" className="feedback-link">here</a>
+      </div>
       {/* Navigation */}
       <nav className="dashboard-navbar">
         <div className="nav-container">
@@ -234,6 +263,9 @@ const AirdropDashboard: React.FC = () => {
           </div>
         </div>
       </nav>
+
+      {/* Scrolling Strip Bar */}
+      <ScrollingStripBar />
 
       {/* Success Message */}
       {successMessage && (
