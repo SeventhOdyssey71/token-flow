@@ -1159,7 +1159,157 @@
   }
 }
 
+@keyframes funSpin {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(90deg) scale(1.1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1);
+  }
+  75% {
+    transform: rotate(270deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--primary);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(var(--primary-rgb), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0);
+  }
+}
+
 .spinning {
-  animation: spin 1s linear infinite;
+  animation: funSpin 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
   transform-origin: center;
+}
+
+.icon-button.refreshing {
+  animation: bounce 0.5s ease-in-out infinite, pulse 1.5s infinite;
+  background: var(--primary);
+  color: var(--background);
+  border-color: var(--primary);
+}
+
+.icon-button.refreshing svg {
+  filter: drop-shadow(0 0 8px rgba(var(--primary-rgb), 0.5));
+}
+
+/* View Toggle Styling */
+.view-toggle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-3xl);
+  padding: var(--space-sm);
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: var(--space-md) var(--space-2xl);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: var(--text-base);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  min-width: 180px;
+}
+
+.toggle-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--gradient-primary);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 10px;
+}
+
+.toggle-btn:hover:not(.active):not(:disabled) {
+  color: var(--text-primary);
+  transform: translateY(-2px);
+}
+
+.toggle-btn.active {
+  background: var(--primary);
+  color: var(--background);
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px var(--shadow-md);
+}
+
+.toggle-btn.active::before {
+  opacity: 0.1;
+}
+
+.toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Icon Button Styling */
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.icon-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow-md);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.icon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.icon-button svg {
+  width: 20px;
+  height: 20px;
 }

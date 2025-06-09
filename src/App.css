@@ -5,6 +5,7 @@
 :root {
   /* Monochrome Color Palette */
   --primary: #000000;
+  --primary-rgb: 0, 0, 0;
   --primary-hover: #1a1a1a;
   --secondary: #333333;
   --accent: #666666;
@@ -67,6 +68,7 @@
 /* Dark Mode Monochrome Theme */
 [data-theme="dark"] {
   --primary: #ffffff;
+  --primary-rgb: 255, 255, 255;
   --primary-hover: #e5e5e5;
   --secondary: #cccccc;
   --accent: #999999;

@@ -193,7 +193,7 @@ function App() {
         <div className="hero-content">
           <div className="hero-badge">
             <span className="badge-pulse"></span>
-            🚀 Now in Beta
+            Now in Beta
           </div>
           
           <h1 className="hero-title">
@@ -201,9 +201,7 @@ function App() {
             <br />
             <span className="gradient-text-secondary">Distribution</span>
             <span className="title-decoration">
-              <svg viewBox="0 0 100 20" className="title-underline">
-                <path d="M0 10 Q50 0 100 10" stroke="currentColor" strokeWidth="2" fill="none" />
-              </svg>
+              
             </span>
           </h1>
           
@@ -227,24 +225,7 @@ function App() {
             </a>
           </div>
           
-          <div className="hero-stats">
-            <div className="stat-card" data-value="1000+">
-              
-              <h3 className="stat-number">1000+</h3>
-              <p>Events Powered</p>
-              <div className="stat-bar"></div>
-            </div>
-            <div className="stat-card" data-value="25K+">
-              <h3 className="stat-number">25K+</h3>
-              <p>Tokens Distributed</p>
-              <div className="stat-bar"></div>
-            </div>
-            <div className="stat-card" data-value="100+">
-              <h3 className="stat-number">100+</h3>
-              <p>Communities</p>
-              <div className="stat-bar"></div>
-            </div>
-          </div>
+      
         </div>
       </section>
 
@@ -354,7 +335,7 @@ function App() {
       <section id="events" className="events-showcase">
         <div className="section-header">
           <div className="section-badge">
-            <span>🎉 Success Stories</span>
+            <span> Success Stories</span>
           </div>
           <h2 className="section-title">Recent Events</h2>
           <p className="section-description">
@@ -439,18 +420,9 @@ function App() {
             </svg>
           </button>
           <div className="cta-stats">
-            <div className="cta-stat">
-              <span className="cta-stat-number">2.5s</span>
-              <span className="cta-stat-label">Average setup time</span>
-            </div>
-            <div className="cta-stat">
-              <span className="cta-stat-number">99.9%</span>
-              <span className="cta-stat-label">Success rate</span>
-            </div>
-            <div className="cta-stat">
-              <span className="cta-stat-number">24/7</span>
-              <span className="cta-stat-label">Community support</span>
-            </div>
+          
+          
+           
           </div>
         </div>
         <div className="cta-decoration">

@@ -276,7 +276,7 @@ const FunctionalDashboard: React.FC = () => {
           </header>
 
           {/* View Toggle */}
-          <div className="view-toggle" style={{ marginBottom: '2rem' }}>
+          <div className="view-toggle">
             <button 
               className={`toggle-btn ${viewMode === 'mine' ? 'active' : ''}`}
               onClick={() => {
@@ -382,19 +382,19 @@ const FunctionalDashboard: React.FC = () => {
               <div className="events-header">
                 <h3>Distribution History</h3>
                 <button 
-                  className="secondary-button"
+                  className={`icon-button ${isRefreshing ? 'refreshing' : ''}`}
                   onClick={() => {
                     setIsRefreshing(true);
                     fetchStats();
                   }}
                   disabled={isLoading || isRefreshing}
+                  title={isRefreshing ? 'Refreshing...' : 'Refresh data'}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isRefreshing ? 'spinning' : ''}>
                     <polyline points="23 4 23 10 17 10" />
                     <polyline points="1 20 1 14 7 14" />
                     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
                   </svg>
-                  {isRefreshing ? 'Refreshing...' : 'Refresh'}
                 </button>
               </div>
               

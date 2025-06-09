@@ -575,6 +575,10 @@ export const useContract = () => {
       const distributions = events.data
         .map((event: any) => {
           const parsedEvent = event.parsedJson as any;
+          
+          // Use event timestamp if available, otherwise use the timestamp from the event data
+          const eventTimestamp = event.timestampMs ? parseInt(event.timestampMs) : parseInt(parsedEvent.timestamp);
+          
           return {
             id: event.id.txDigest,
             distributor: parsedEvent.distributor,
@@ -582,7 +586,7 @@ export const useContract = () => {
             totalAmount: parseInt(parsedEvent.total_amount) / 1_000_000_000, // Convert from MIST to SUI
             recipients: parsedEvent.recipients,
             amountPerRecipient: parseInt(parsedEvent.amount_per_recipient) / 1_000_000_000,
-            timestamp: new Date(parseInt(parsedEvent.timestamp)),
+            timestamp: new Date(eventTimestamp),
             txDigest: event.id.txDigest,
           };
         })
