@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useCurrentAccount, ConnectButton } from '@mysten/dapp-kit';
 import { useTheme } from '../contexts/ThemeContext';
 import { useContract } from '../hooks/useContract';

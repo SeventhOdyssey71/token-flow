@@ -24,7 +24,7 @@ const FunctionalDashboard: React.FC = () => {
   const account = useCurrentAccount();
   const navigate = useNavigate();
   const location = useLocation();
-  const { getDistributionStats, getDistributionHistory, getUserDistributions } = useContract();
+  const { getDistributionStats, getUserDistributions } = useContract();
   
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
